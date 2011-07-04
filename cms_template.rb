@@ -3,13 +3,15 @@ project :test => :shoulda, :renderer => :haml, :stylesheet => :sass, :script => 
 
 # Default routes
 APP_INIT = <<-APP
+
   get "/" do
-    "Hello World!"
+    "Hello Alan."
   end
 
   get :about, :map => '/about_us' do
     render :haml, "%p This is a simple CMS created to demonstrate the power of Padrino!"
   end
+  
 APP
 inject_into_file 'app/app.rb', APP_INIT, :after => "enable :sessions\n"
 
@@ -31,7 +33,7 @@ CONTENT_INDEX_ROUTE = <<-CONTENT
       render 'contents/index'
 CONTENT
 CONTENT_SHOW_ROUTE = <<-CONTENT
-      @content = Post.find_by_id(params[:id])
+      @content = Content.find_by_id(params[:id])
       render 'contents/show'
 CONTENT
 inject_into_file 'app/controllers/contents.rb', CONTENT_INDEX_ROUTE, :after => "get :index do\n"
