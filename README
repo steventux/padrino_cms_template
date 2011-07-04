@@ -1,0 +1,6 @@
+== Padrino CMS Template ==
+
+A template for generating Padrino apps with simple CMS capabilities.
+
+
+Usage: padrino g project my_project --template path/to/padrino_cms_template.rb
