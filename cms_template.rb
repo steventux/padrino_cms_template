@@ -1,17 +1,23 @@
-# Template for simple  ActiveRecord based CMS.
+# Template for simple ActiveRecord based CMS.
 project :test => :shoulda, :renderer => :haml, :stylesheet => :sass, :script => :jquery, :orm => :activerecord, :bundle => true
+
+
 
 # Default routes
 APP_INIT = <<-APP
 
+  before do
+    @contents = Content.where(:path => default_path)
+  end
+
   get "/" do
-    "Hello Alan."
+    cmsify
   end
 
   get :about, :map => '/about_us' do
     render :haml, "%p This is a simple CMS created to demonstrate the power of Padrino!"
   end
-  
+
 APP
 inject_into_file 'app/app.rb', APP_INIT, :after => "enable :sessions\n"
 
@@ -21,7 +27,7 @@ rake "ar:create ar:migrate seed"
 
 # Create contents model then
 # append timestamps
-generate :model, "content path:string title:string subtitle:string body:text author:string status:string"
+generate :model, "content path:string title:string subtitle:string body:text status:string"
 inject_into_file 'db/migrate/002_create_contents.rb',"      t.timestamps\n",:after => "t.string :status\n"
 rake 'ar:migrate'
 
@@ -61,6 +67,24 @@ inject_into_file 'admin/controllers/contents.rb',"    @content.account = current
 
 # Include RSS Feed
 inject_into_file 'app/controllers/contents.rb', ", :provides => [:html, :rss, :atom]", :after => "get :index"
+
+
+# Copy the IncontextCms module into place
+get "https://github.com/steventux/padrino_cms_template/raw/master/lib/cms_helper.rb", "app/helpers/cms_helper.rb"
+
+HELPER_METHODS = <<-HELPER
+  def default_content
+    CmsHelper.default_content
+  end
+  def cmsify(opts={})
+    CmsHelper.default_content opts
+  end
+  def default_path
+    CmsHelper.default_path
+  end
+HELPER
+
+inject_into_file 'app/helpers/contents_helper.rb', HELPER_METHODS, :after => ".helpers do\n"
 
 # Create index.haml
 CONTENT_INDEX = <<-CONTENT
@@ -103,13 +127,13 @@ APPLICATION = <<-LAYOUT
 !!! Strict
 %html
   %head
-    %title= [@title, "Padrino Sample Blog"].compact.join(" | ")
+    %title= [@title, "Simple Padrino CMS"].compact.join(" | ")
     = stylesheet_link_tag 'reset', 'application'
     = javascript_include_tag 'jquery', 'application'
     = yield_content :include
   %body
     #header
-      %h1 Sample Padrino CMS
+      %h1 Simple Padrino CMS
       %ul.menu
         %li= link_to 'Content', url_for(:contents, :index)
         %li= link_to 'About', url_for(:about)
@@ -142,4 +166,3 @@ create_file 'app/views/layouts/application.haml', APPLICATION
 
 #get 'https://github.com/padrino/sample_blog/raw/master/public/stylesheets/reset.css', 'public/stylesheets/reset.css'
 #get "https://github.com/padrino/sample_blog/raw/master/app/stylesheets/application.sass", 'app/stylesheets/application.sass'
-

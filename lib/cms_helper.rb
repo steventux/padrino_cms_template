@@ -1,10 +1,10 @@
 class CmsHelper
 
-  def default_content
+  def self.default_content
     cmsify
   end
 
-  def cmsify(opts={})
+  def self.cmsify(opts={})
     path = opts[:path] || default_path
     field = opts[:field] || "body"
     value = @contents.nil? ? '' : @contents.first.send(field)
@@ -22,7 +22,7 @@ class CmsHelper
   # Returns the default key for the current request, this will be
   # request.route.path if present otherwise request.path
   #
-  def default_path
+  def self.default_path
     raise "Unable to access current request." unless self.respond_to? 'request'
 
     if request.route.class == HttpRouter::Route
