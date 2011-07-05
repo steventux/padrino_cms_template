@@ -76,11 +76,11 @@ HELPER_METHODS = <<-HELPER
   def default_content
     CmsHelper.default_content
   end
-  def cmsify(opts={})
-    CmsHelper.default_content opts
+  def cmsify(opts={:account => @current_account, :field => 'body', :path => default_path})
+    CmsHelper.cmsify @contents, opts
   end
   def default_path
-    CmsHelper.default_path
+    CmsHelper.default_path request
   end
 HELPER
 
