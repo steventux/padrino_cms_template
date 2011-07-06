@@ -7,6 +7,7 @@ project :test => :shoulda, :renderer => :haml, :stylesheet => :sass, :script => 
 APP_INIT = <<-APP
 
   before do
+    @current_account = current_account
     @contents = Content.where(:path => default_path)
   end
 
@@ -70,17 +71,34 @@ inject_into_file 'app/controllers/contents.rb', ", :provides => [:html, :rss, :a
 
 
 # Copy the IncontextCms module into place
-get "https://github.com/steventux/padrino_cms_template/raw/master/lib/cms_helper.rb", "app/helpers/cms_helper.rb"
+# get "https://github.com/steventux/padrino_cms_template/raw/master/lib/cms_helper.rb", "app/helpers/cms_helper.rb"
 
 HELPER_METHODS = <<-HELPER
   def default_content
-    CmsHelper.default_content
+    cmsify
   end
-  def cmsify(opts={:account => @current_account, :field => 'body', :path => default_path})
-    CmsHelper.cmsify @contents, opts
+  def cmsify(opts={:field => 'body', :path => default_path})
+    path = opts[:path] || "/"
+    field = opts[:field] || "body"
+    value = @contents.empty? ? '' : @contents.first.send(field)
+    if @current_account and @current_account.role == "admin"
+      if @contents.empty?
+        # TODO : allow for templating of cms links
+        value = "&nbsp;&nbsp;#{link_to '[add text]', '/admin/contents/new?path='+opts[:path]}"
+      else
+        value += "&nbsp;&nbsp;#{link_to '[edit]', '/admin/contents/edit/'+@contents.first.to_param}"
+      end
+    end
+    value
   end
   def default_path
-    CmsHelper.default_path request
+    raise "Unable to access current request." if request.nil?
+
+    if request.route.class == HttpRouter::Route
+      request.route.path
+    else
+      request.path_info
+    end
   end
 HELPER
 
