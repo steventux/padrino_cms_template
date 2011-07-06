@@ -5,16 +5,18 @@ module CmsUtils
   end
 
   def self.cmsify(contents, opts)
-    path = opts[:path] || "/"
-    field = opts[:field] || "body"
-    value = @contents.nil? ? '' : @contents.first.send(field)
+    opts[:path] ||= "/"
+    opts[:field] ||= "body"
+    value = @contents.nil? ? '' : @contents.first.send(opts[:field])
     if @current_account and @current_account.role == "admin"
       if @contents.nil?
-        # TODO : allow for templating of cms links
-        value = "&nbsp;&nbsp;#{link_to '[add text]', '/admin/contents/new?path='+opts[:path]}"
+        label = '[add text]'
+        url = "/admin/contents/new?path=#{opts[:path]}"
       else
-        value += "&nbsp;&nbsp;#{link_to '[edit]', '/admin/contents/edit/'+@contents.first.to_param}"
+        label = '[edit]'
+        url = "/admin/contents/edit/#{@contents.first.to_param}"
       end
+      value += %Q(<a href="#{url}">#{label}</a>)
     end
     value
   end
@@ -41,7 +43,7 @@ module CmsUtils
   end
   
   def self.current_account session_id
-    @current_account ||= Account.find_by_id() if defined?(Account)
+    @current_account ||= Account.find_by_id(session_id) if defined?(Account)
   end
-
+  
 end
