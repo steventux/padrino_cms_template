@@ -1,18 +1,21 @@
 # Template for simple ActiveRecord based CMS.
+# First generate the project with all our favourite bits n bobs.
 project :test => :shoulda, :renderer => :haml, :stylesheet => :sass, :script => :jquery, :orm => :activerecord, :bundle => true
 
-
-
-# Default routes
+# Set up the session key, the cms filter and a couple of basic routes
 APP_INIT = <<-APP
+  set :session_id, :_padrino_cms_session_id
 
   before do
-    @current_account = current_account
-    @contents = Content.where(:path => default_path)
+    @current_account = CmsUtils.current_account
+    @contents = Content.where(:path => CmsUtils.default_path(request))
   end
 
   get "/" do
-    cmsify
+    render :haml <<-INDEX
+      %h1 Simple Padrino CMS
+      =CmsUtils.cmsify(@contents, {})
+    INDEX
   end
 
   get :about, :map => '/about_us' do
@@ -71,35 +74,10 @@ inject_into_file 'app/controllers/contents.rb', ", :provides => [:html, :rss, :a
 
 
 # Copy the IncontextCms module into place
-# get "https://github.com/steventux/padrino_cms_template/raw/master/lib/cms_helper.rb", "app/helpers/cms_helper.rb"
+get "https://github.com/steventux/padrino_cms_template/raw/master/lib/cms_utils.rb", "lib/cms_utils.rb"
 
 HELPER_METHODS = <<-HELPER
-  def default_content
-    cmsify
-  end
-  def cmsify(opts={:field => 'body', :path => default_path})
-    path = opts[:path] || "/"
-    field = opts[:field] || "body"
-    value = @contents.empty? ? '' : @contents.first.send(field)
-    if @current_account and @current_account.role == "admin"
-      if @contents.empty?
-        # TODO : allow for templating of cms links
-        value = "&nbsp;&nbsp;#{link_to '[add text]', '/admin/contents/new?path='+opts[:path]}"
-      else
-        value += "&nbsp;&nbsp;#{link_to '[edit]', '/admin/contents/edit/'+@contents.first.to_param}"
-      end
-    end
-    value
-  end
-  def default_path
-    raise "Unable to access current request." if request.nil?
-
-    if request.route.class == HttpRouter::Route
-      request.route.path
-    else
-      request.path_info
-    end
-  end
+ include CmsUtils
 HELPER
 
 inject_into_file 'app/helpers/contents_helper.rb', HELPER_METHODS, :after => ".helpers do\n"
