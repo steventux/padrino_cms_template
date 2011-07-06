@@ -4,18 +4,16 @@ project :test => :shoulda, :renderer => :haml, :stylesheet => :sass, :script => 
 
 # Set up the session key, the cms filter and a couple of basic routes
 APP_INIT = <<-APP
+
   set :session_id, :_padrino_cms_session_id
 
   before do
-    @current_account = CmsUtils.current_account
+    @current_account = CmsUtils.current_account(session[settings.session_id])
     @contents = Content.where(:path => CmsUtils.default_path(request))
   end
 
   get "/" do
-    render :haml <<-INDEX
-      %h1 Simple Padrino CMS
-      =CmsUtils.cmsify(@contents, {})
-    INDEX
+    CmsUtils.cmsify(@contents, {})
   end
 
   get :about, :map => '/about_us' do

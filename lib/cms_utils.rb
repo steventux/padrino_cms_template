@@ -36,12 +36,12 @@ module CmsUtils
     end
   end
   
-  def current_account
-    self.class current_account
+  def current_account session_id
+    self.class current_account session_id
   end
   
-  def self.current_account
-    @current_account ||= Account.find_by_id(session[settings.session_id]) if defined?(Account)
+  def self.current_account session_id
+    @current_account ||= Account.find_by_id() if defined?(Account)
   end
 
 end
