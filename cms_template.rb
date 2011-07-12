@@ -2,10 +2,12 @@
 # First generate the project with all our favourite bits n bobs.
 project :test => :shoulda, :renderer => :haml, :stylesheet => :sass, :script => :jquery, :orm => :activerecord, :bundle => true
 
+SESSION_KEY_SETTING = "set :session_id, :_padrino_cms_session_id"
+
 # Set up the session key, the cms filter and a couple of basic routes
 APP_INIT = <<-APP
 
-  set :session_id, :_padrino_cms_session_id
+  #{SESSION_KEY_SETTING}
 
   before do
     @current_account = CmsUtils.current_account(session[settings.session_id])
@@ -26,6 +28,8 @@ inject_into_file 'app/app.rb', APP_INIT, :after => "enable :sessions\n"
 # Generating padrino admin
 generate :admin
 rake "ar:create ar:migrate seed"
+
+inject_into_file 'admin/app.rb', "  #{SESSION_KEY_SETTING}\n", :after => "enable  :sessions\n"
 
 # Create contents model then
 # append timestamps
@@ -157,6 +161,14 @@ APPLICATION = <<-LAYOUT
       Copyright (c) 2009-2010 Padrino
 LAYOUT
 create_file 'app/views/layouts/application.haml', APPLICATION
+
+CONTENT_FORM_PATH_FIELD = <<-CONTENT
+  -if params[:path]
+    =f.hidden_field :path, :value => params[:path]
+  -else
+CONTENT
+
+inject_into_file 'admin/views/contents/_form.haml', CONTENT_FORM_PATH_FIELD, :before => "   =f.label :path"
 
 #get 'https://github.com/padrino/sample_blog/raw/master/public/stylesheets/reset.css', 'public/stylesheets/reset.css'
 #get "https://github.com/padrino/sample_blog/raw/master/app/stylesheets/application.sass", 'app/stylesheets/application.sass'
