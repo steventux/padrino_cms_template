@@ -15,11 +15,7 @@ APP_INIT = <<-APP
   end
 
   get "/" do
-    CmsUtils.cmsify(@contents, {})
-  end
-
-  get :about, :map => '/about_us' do
-    render :haml, "%p This is a simple CMS created to demonstrate the power of Padrino!"
+    render "main"
   end
 
 APP
@@ -74,9 +70,11 @@ inject_into_file 'admin/controllers/contents.rb',"    @content.account = current
 # Include RSS Feed
 inject_into_file 'app/controllers/contents.rb', ", :provides => [:html, :rss, :atom]", :after => "get :index"
 
-
-# Copy the IncontextCms module into place
+# Copy the CmsUtils module into place
 get "https://github.com/steventux/padrino_cms_template/raw/master/lib/cms_utils.rb", "lib/cms_utils.rb"
+
+# Copy the main view into place
+get "https://github.com/steventux/padrino_cms_template/raw/master/app/views/main.haml", "app/views/main.haml"
 
 HELPER_METHODS = <<-HELPER
  include CmsUtils
@@ -134,7 +132,6 @@ APPLICATION = <<-LAYOUT
       %h1 Simple Padrino CMS
       %ul.menu
         %li= link_to 'Content', url_for(:contents, :index)
-        %li= link_to 'About', url_for(:about)
     #container
       #main= yield
       #sidebar
@@ -170,5 +167,5 @@ CONTENT
 
 inject_into_file 'admin/views/contents/_form.haml', CONTENT_FORM_PATH_FIELD, :before => "   =f.label :path"
 
-#get 'https://github.com/padrino/sample_blog/raw/master/public/stylesheets/reset.css', 'public/stylesheets/reset.css'
-#get "https://github.com/padrino/sample_blog/raw/master/app/stylesheets/application.sass", 'app/stylesheets/application.sass'
+get 'https://github.com/padrino/sample_blog/raw/master/public/stylesheets/reset.css', 'public/stylesheets/reset.css'
+get "https://github.com/padrino/sample_blog/raw/master/app/stylesheets/application.sass", 'app/stylesheets/application.sass'
