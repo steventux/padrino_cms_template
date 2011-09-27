@@ -14,7 +14,7 @@ APP_INIT = <<-APP
     @contents = Content.where(:path => CmsUtils.default_path(request))
   end
 
-  get "/" do
+  get "/*path", :priority => :low do
     render "main"
   end
 
@@ -61,7 +61,7 @@ CONTENT_MODEL = <<-CONTENT
   validates_presence_of :title
   validates_presence_of :body
 CONTENT
-inject_into_file 'app/models/content.rb', CONTENT_MODEL, :after => "ActiveRecord::Base\n"
+inject_into_file 'models/content.rb', CONTENT_MODEL, :after => "ActiveRecord::Base\n"
 rake 'ar:migrate'
 
 # Update admin app controller for content

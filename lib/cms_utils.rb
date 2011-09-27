@@ -7,16 +7,18 @@ module CmsUtils
   def self.cmsify(contents, opts)
     opts[:path] ||= "/"
     opts[:field] ||= "body"
-    value = @contents.nil? ? '' : @contents.first.send(opts[:field])
+    value = (contents.empty? or contents.first.nil?) ? '' : contents.first.send(opts[:field])
+    #
+    # logger.debug "@current_account : #{@current_account}, role : #{@current_account.role}, contents : #{contents}"
     if @current_account and @current_account.role == "admin"
-      if @contents.nil?
-        label = '[add text]'
+      if contents.empty? or contents.first.nil?
+        label = "[add #{opts[:field]}]"
         url = "/admin/contents/new?path=#{opts[:path]}"
       else
         label = '[edit]'
-        url = "/admin/contents/edit/#{@contents.first.to_param}"
+        url = "/admin/contents/edit/#{contents.first.to_param}"
       end
-      value += %Q(<a href="#{url}">#{label}</a>)
+      value += %Q(&nbsp;&nbsp;<a href="#{url}">#{label}</a>)
     end
     value
   end
@@ -37,13 +39,13 @@ module CmsUtils
       request.path_info
     end
   end
-  
+
   def current_account session_id
     self.class current_account session_id
   end
-  
+
   def self.current_account session_id
     @current_account ||= Account.find_by_id(session_id) if defined?(Account)
   end
-  
+
 end
