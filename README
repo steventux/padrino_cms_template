@@ -1,5 +1,11 @@
 == Padrino Content Model Template ==
 
-A template for generating Padrino apps with an ActiveRecord Content model.
+A template for generating Padrino apps with an ActiveRecord Content model which can be used to create pages, snippets (page fragments) and components (menus, navs, footers). Currently bundled with CKEditor to make content editing a bit easier.
 
 Usage: padrino g project my_project --template path/to/cms_template.rb
+
+= TODOs: =
+  - 100% Test coverage, I am going to hell without it.
+  - acts_as_tree style content heirarchy with list pages.
+  - Generator options to allow for inclusion of specific features, e.g. CKEditor, Google Analytics.
+  - Component with template style of content.
