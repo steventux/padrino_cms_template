@@ -14,6 +14,12 @@ APP_INIT = <<-APP
     @contents = Content.where(:path => CmsUtils.default_path(request))
   end
 
+  get "/sitemap", :provides => [:html, :xml] do
+    @title = "Sitemap"
+    @pages = Content.where("path LIKE '/%'")
+    render "sitemap"
+  end
+
   get "/*path", :priority => :low do
     render "main"
   end
@@ -75,6 +81,11 @@ get "https://github.com/steventux/padrino_cms_template/raw/master/lib/cms_utils.
 
 # Copy the main view into place
 get "https://github.com/steventux/padrino_cms_template/raw/master/app/views/main.haml", "app/views/main.haml"
+get "https://github.com/steventux/padrino_cms_template/raw/master/app/views/sitemap.haml", "app/views/sitemap.haml"
+get "https://github.com/steventux/padrino_cms_template/raw/master/app/views/sitemap.xml.haml", "app/views/sitemap.xml.haml"
+
+# Get the FCKEditor
+get "https://github.com/steventux/padrino_cms_template/raw/master/public/admin/javascripts", "public/admin/javascripts"
 
 HELPER_METHODS = <<-HELPER
  include CmsUtils
