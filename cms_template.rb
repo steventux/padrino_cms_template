@@ -1,10 +1,12 @@
-# Template for simple ActiveRecord based CMS.
+# Template for simple ActiveRecord based CMS with Padrino.
 # First generate the project with all our favourite bits n bobs.
-project :test => :shoulda, :renderer => :haml, :stylesheet => :sass, :script => :jquery, :orm => :activerecord, :bundle => true
+project :test => :minitest, :renderer => :haml, :stylesheet => :less, :script => :jquery, :orm => :activerecord, :bundle => true
 
 SESSION_KEY_SETTING = "set :session_id, :_padrino_cms_session_id"
 
 # Set up the session key, the cms filter and a couple of basic routes
+#
+# TODO: Might be simpler to copy the whole app.rb into place.
 APP_INIT = <<-APP
 
   #{SESSION_KEY_SETTING}
@@ -19,7 +21,10 @@ APP_INIT = <<-APP
     @pages = Content.where("path LIKE '/%'")
     render "sitemap"
   end
-
+  
+  # IMPORTANT That this route is the last in the app as :priority => :low does not seem to do what I expected.
+  # Maybe I just need to RTFM again.
+  #
   get "/*path", :priority => :low do
     render "main"
   end
@@ -27,19 +32,27 @@ APP_INIT = <<-APP
 APP
 inject_into_file 'app/app.rb', APP_INIT, :after => "enable :sessions\n"
 
-# Generating padrino admin
+# Generate padrino admin.
+#
+puts "Generating Padrin Admin app."
 generate :admin
 rake "ar:create ar:migrate seed"
 
+# Make the admin and main app share sessions. 
+#
 inject_into_file 'admin/app.rb', "  #{SESSION_KEY_SETTING}\n", :after => "enable  :sessions\n"
 
-# Create contents model then
-# append timestamps
-generate :model, "content path:string title:string subtitle:string body:text status:string"
+# Create contents model then append timestamps
+#
+puts "Creating contents model and migration."
+generate :model, "content path:string account_id:integer title:string subtitle:string body:text status:string"
+# TODO: Can this be done with the generate command above?
 inject_into_file 'db/migrate/002_create_contents.rb',"      t.timestamps\n",:after => "t.string :status\n"
 rake 'ar:migrate'
 
-# Generating contents controller
+# Generate contents controller
+#
+puts "Creating contents controller."
 generate :controller, "contents get:index get:show"
 gsub_file('app/controllers/contents.rb', /^\s+\#\s+.*\n/,'')
 CONTENT_INDEX_ROUTE = <<-CONTENT
@@ -52,40 +65,43 @@ CONTENT_SHOW_ROUTE = <<-CONTENT
 CONTENT
 inject_into_file 'app/controllers/contents.rb', CONTENT_INDEX_ROUTE, :after => "get :index do\n"
 inject_into_file 'app/controllers/contents.rb', CONTENT_SHOW_ROUTE, :after => "get :show do\n"
-inject_into_file 'app/controllers/contents.rb', ", :with => :id", :after => "get :show" # doesn't run?
 
 # Generate admin_page for content
+#
+puts "Creating contents administration pages."
 generate :admin_page, "content"
 
-# Migrations to add account to content
-generate :migration, "AddAccountToContent account_id:integer"
-
-# Update Post Model with Validations and Associations
+# Update Content Model with Validations and Associations
+#
+puts "Creating associations."
 CONTENT_MODEL = <<-CONTENT
   belongs_to :account
   validates_presence_of :path
   validates_presence_of :title
   validates_presence_of :body
 CONTENT
+
 inject_into_file 'models/content.rb', CONTENT_MODEL, :after => "ActiveRecord::Base\n"
 rake 'ar:migrate'
 
 # Update admin app controller for content
+#
 inject_into_file 'admin/controllers/contents.rb',"    @content.account = current_account\n",:after => "new(params[:content])\n"
 
-# Include RSS Feed
+# Include RSS Feed TODO: Need this?
+#
 inject_into_file 'app/controllers/contents.rb', ", :provides => [:html, :rss, :atom]", :after => "get :index"
 
-# Copy the CmsUtils module into place
-get "https://github.com/steventux/padrino_cms_template/raw/master/lib/cms_utils.rb", "lib/cms_utils.rb"
 
-# Copy the main view into place
-get "https://github.com/steventux/padrino_cms_template/raw/master/app/views/main.haml", "app/views/main.haml"
-get "https://github.com/steventux/padrino_cms_template/raw/master/app/views/sitemap.haml", "app/views/sitemap.haml"
-get "https://github.com/steventux/padrino_cms_template/raw/master/app/views/sitemap.xml.haml", "app/views/sitemap.xml.haml"
+# Copy the CmsUtils module the cms views and CKEditor files into place
+#
+["lib/cms_utils.rb", "app/views/main.haml", "app/views/sitemap.haml", 
+ "app/views/sitemap.xml.haml", "public/admin/javascripts"].each do |path|
+ 
+  puts "Copying #{File.dirname(__FILE__)}/#{path} to #{destination_root}/#{path}"
+  FileUtils.cp_r "#{File.dirname(__FILE__)}/#{path}", "#{destination_root}/#{path}"
 
-# Get the FCKEditor
-get "https://github.com/steventux/padrino_cms_template/raw/master/public/admin/javascripts", "public/admin/javascripts"
+end
 
 HELPER_METHODS = <<-HELPER
  include CmsUtils
@@ -140,31 +156,11 @@ APPLICATION = <<-LAYOUT
     = yield_content :include
   %body
     #header
-      %h1 Simple Padrino CMS
+      %h1 Padrino CMS
       %ul.menu
         %li= link_to 'Content', url_for(:contents, :index)
     #container
       #main= yield
-      #sidebar
-        - form_tag url_for(:contents, :index), :method => 'get'  do
-          Search for:
-          = text_field_tag 'query', :value => params[:query]
-          = submit_tag 'Search'
-        %p Recent Contents
-        %ul.bulleted
-          %li Item 1 - Lorem ipsum dolorum itsum estem
-          %li Item 2 - Lorem ipsum dolorum itsum estem
-          %li Item 3 - Lorem ipsum dolorum itsum estem
-        %p Categories
-        %ul.bulleted
-          %li Item 1 - Lorem ipsum dolorum itsum estem
-          %li Item 2 - Lorem ipsum dolorum itsum estem
-          %li Item 3 - Lorem ipsum dolorum itsum estem
-        %p Latest Comments
-        %ul.bulleted
-          %li Item 1 - Lorem ipsum dolorum itsum estem
-          %li Item 2 - Lorem ipsum dolorum itsum estem
-          %li Item 3 - Lorem ipsum dolorum itsum estem
     #footer
       Copyright (c) 2009-2010 Padrino
 LAYOUT
@@ -179,4 +175,4 @@ CONTENT
 inject_into_file 'admin/views/contents/_form.haml', CONTENT_FORM_PATH_FIELD, :before => "   =f.label :path"
 
 get 'https://github.com/padrino/sample_blog/raw/master/public/stylesheets/reset.css', 'public/stylesheets/reset.css'
-get "https://github.com/padrino/sample_blog/raw/master/app/stylesheets/application.sass", 'app/stylesheets/application.sass'
+# get "https://github.com/padrino/sample_blog/raw/master/app/stylesheets/application.less", 'app/stylesheets/application.sass'

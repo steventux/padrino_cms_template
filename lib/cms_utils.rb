@@ -12,13 +12,13 @@ module CmsUtils
     # logger.debug "@current_account : #{@current_account}, role : #{@current_account.role}, contents : #{contents}"
     if @current_account and @current_account.role == "admin"
       if contents.empty? or contents.first.nil?
-        label = "[add #{opts[:field]}]"
+        label = "add #{opts[:field]}"
         url = "/admin/contents/new?path=#{opts[:path]}"
       else
-        label = '[edit]'
+        label = 'edit'
         url = "/admin/contents/edit/#{contents.first.to_param}"
       end
-      value += %Q(&nbsp;&nbsp;<a href="#{url}">#{label}</a>)
+      value += %Q(<a href="#{url}" class="cmsified" title="#{label}"><img src="/admin/images/edit.png" alt="#{label}"/></a>)
     end
     value
   end
@@ -33,11 +33,11 @@ module CmsUtils
   def self.default_path request
     raise "Unable to access current request." if request.nil?
 
-    if request.route.class == HttpRouter::Route
-      request.route.path
-    else
+    #if request.route.class == HttpRouter::Route
+    #  request.route.path
+    #else
       request.path_info
-    end
+    #end
   end
 
   def current_account session_id
@@ -45,7 +45,7 @@ module CmsUtils
   end
 
   def self.current_account session_id
-    @current_account ||= Account.find_by_id(session_id) if defined?(Account)
+    @current_account = Account.find_by_id(session_id) if defined?(Account)
   end
 
 end
