@@ -95,13 +95,37 @@ inject_into_file 'app/controllers/contents.rb', ", :provides => [:html, :rss, :a
 
 # Copy the CmsUtils module the cms views and CKEditor files into place
 #
-["lib/cms_utils.rb", "app/views/main.haml", "app/views/sitemap.haml", 
- "app/views/sitemap.xml.haml", "public/admin/javascripts"].each do |path|
+%w( lib/cms_utils.rb 
+    lib/uploader.rb
+    app/views/layouts/application.haml 
+    app/views/main.haml
+    app/views/sitemap.haml
+    app/views/sitemap.xml.haml
+    app/views/contents/show.haml
+    app/views/contents/index.haml
+    admin/views/layouts/application.haml
+    admin/controllers/images.rb
+    public/admin/stylesheets/base.css
+    public/admin/javascripts
+    public/admin/images
+  ).each do |path|
  
   puts "Copying #{File.dirname(__FILE__)}/#{path} to #{destination_root}/#{path}"
   FileUtils.cp_r "#{File.dirname(__FILE__)}/#{path}", "#{destination_root}/#{path}"
 
 end
+
+IMAGE_UPLOAD_GEMS = <<-GEMS
+
+# Gems needed for image upload
+gem 'carrierwave'
+gem 'mini_magick'
+gem 'fog'
+
+GEMS
+
+puts "Adding required gems to Gemfile"
+inject_into_file 'Gemfile', IMAGE_UPLOAD_GEMS, :after => "gem 'sqlite3'\n"
 
 HELPER_METHODS = <<-HELPER
  include CmsUtils
@@ -109,62 +133,6 @@ HELPER
 
 inject_into_file 'app/helpers/contents_helper.rb', HELPER_METHODS, :after => ".helpers do\n"
 
-# Create index.haml
-CONTENT_INDEX = <<-CONTENT
-- @title = "Welcome"
-
-- content_for :include do
-  = feed_tag(:rss, url(:contents, :index, :format => :rss),:title => "RSS")
-  = feed_tag(:atom, url(:contents, :index, :format => :atom),:title => "ATOM")
-
-#contents= partial 'contents/content', :collection => @contents
-CONTENT
-create_file 'app/views/contents/index.haml', CONTENT_INDEX
-
-# Create _content.haml
-CONTENT_PARTIAL = <<-CONTENT
-.content
-  .title= link_to content.title, url_for(:contents, :show, :id => content)
-  .date= time_ago_in_words(content.created_at || Time.now) + ' ago'
-  .body= simple_format(content.body)
-  .details
-    .author Posted by \#{content.account.email}
-CONTENT
-create_file 'app/views/contents/_content.haml', CONTENT_PARTIAL
-
-# Create show.haml
-CONTENT_SHOW = <<-CONTENT
-- @title = @content.title
-#show
-  .content
-    .title= @content.title
-    .date= time_ago_in_words(@content.created_at || Time.now) + ' ago'
-    .body= simple_format(@content.body)
-    .details
-      .author Posted by \#{@content.account.email}
-%p= link_to 'View all contents', url_for(:contents, :index)
-CONTENT
-create_file 'app/views/contents/show.haml', CONTENT_SHOW
-
-APPLICATION = <<-LAYOUT
-!!! Strict
-%html
-  %head
-    %title= [@title, "Simple Padrino CMS"].compact.join(" | ")
-    = stylesheet_link_tag 'reset', 'application'
-    = javascript_include_tag 'jquery', 'application'
-    = yield_content :include
-  %body
-    #header
-      %h1 Padrino CMS
-      %ul.menu
-        %li= link_to 'Content', url_for(:contents, :index)
-    #container
-      #main= yield
-    #footer
-      Copyright (c) 2009-2010 Padrino
-LAYOUT
-create_file 'app/views/layouts/application.haml', APPLICATION
 
 CONTENT_FORM_PATH_FIELD = <<-CONTENT
   -if params[:path]
