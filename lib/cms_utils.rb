@@ -33,11 +33,11 @@ module CmsUtils
   def self.default_path request
     raise "Unable to access current request." if request.nil?
 
-    #if request.route.class == HttpRouter::Route
-    #  request.route.path
-    #else
+    if request.respond_to? 'route' and request.route.is_a? HttpRouter::Route
+      request.route.path
+    else
       request.path_info
-    #end
+    end
   end
 
   def current_account session_id

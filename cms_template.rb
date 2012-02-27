@@ -105,6 +105,7 @@ inject_into_file 'app/controllers/contents.rb', ", :provides => [:html, :rss, :a
     app/views/contents/index.haml
     admin/views/layouts/application.haml
     admin/controllers/images.rb
+    public/stylesheets/application.css
     public/admin/stylesheets/base.css
     public/admin/javascripts
     public/admin/images
@@ -127,6 +128,7 @@ GEMS
 puts "Adding required gems to Gemfile"
 inject_into_file 'Gemfile', IMAGE_UPLOAD_GEMS, :after => "gem 'sqlite3'\n"
 
+puts "Including CMS utility methods in contents_helper.rb"
 HELPER_METHODS = <<-HELPER
  include CmsUtils
 HELPER
@@ -134,13 +136,13 @@ HELPER
 inject_into_file 'app/helpers/contents_helper.rb', HELPER_METHODS, :after => ".helpers do\n"
 
 
-CONTENT_FORM_PATH_FIELD = <<-CONTENT
-  -if params[:path]
-    =f.hidden_field :path, :value => params[:path]
-  -else
-CONTENT
+#CONTENT_FORM_PATH_FIELD = <<-CONTENT
+#  -if params[:path]
+#    =f.hidden_field :path, :value => params[:path]
+#  -else
+#CONTENT
 
-inject_into_file 'admin/views/contents/_form.haml', CONTENT_FORM_PATH_FIELD, :before => "   =f.label :path"
+#inject_into_file 'admin/views/contents/_form.haml', CONTENT_FORM_PATH_FIELD, :before => "   =f.label :path"
 
 get 'https://github.com/padrino/sample_blog/raw/master/public/stylesheets/reset.css', 'public/stylesheets/reset.css'
 # get "https://github.com/padrino/sample_blog/raw/master/app/stylesheets/application.less", 'app/stylesheets/application.sass'
