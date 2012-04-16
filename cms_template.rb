@@ -1,6 +1,6 @@
 # Template for simple ActiveRecord based CMS with Padrino.
 # First generate the project with all our favourite bits n bobs.
-project :test => :minitest, :renderer => :haml, :stylesheet => :less, :script => :jquery, :orm => :activerecord, :bundle => true
+project :test => :minitest, :renderer => :erb, :stylesheet => :less, :script => :jquery, :orm => :activerecord, :bundle => true
 
 SESSION_KEY_SETTING = "set :session_id, :_padrino_cms_session_id"
 
