@@ -32,6 +32,13 @@ APP_INIT = <<-APP
 APP
 inject_into_file 'app/app.rb', APP_INIT, :after => "enable :sessions\n"
 
+# Set a default date format
+#
+DATE_FORMAT = <<-DATE_FORMAT
+  Time::DATE_FORMATS.merge!(:default => "%Y-%m-%d %H:%M")
+DATE_FORMAT
+inject_into_file 'config/boot.rb', DATE_FORMAT, :after => "Padrino.after_load do\n"
+
 # Generate padrino admin.
 #
 puts "Generating Padrin Admin app."
