@@ -104,13 +104,13 @@ inject_into_file 'app/controllers/contents.rb', ", :provides => [:html, :rss, :a
 #
 %w( lib/cms_utils.rb 
     lib/uploader.rb
-    app/views/layouts/application.haml 
-    app/views/main.haml
-    app/views/sitemap.haml
-    app/views/sitemap.xml.haml
-    app/views/contents/show.haml
-    app/views/contents/index.haml
-    admin/views/layouts/application.haml
+    app/views/layouts/application.erb 
+    app/views/main.erb
+    app/views/sitemap.erb
+    app/views/sitemap.xml.erb
+    app/views/contents/show.erb
+    app/views/contents/index.erb
+    admin/views/layouts/application.erb
     admin/controllers/images.rb
     public/stylesheets/application.css
     public/admin/stylesheets/base.css
