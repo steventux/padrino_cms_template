@@ -43,7 +43,8 @@ inject_into_file 'config/boot.rb', DATE_FORMAT, :after => "Padrino.after_load do
 #
 puts "Generating Padrin Admin app."
 generate :admin
-rake "ar:create ar:migrate seed"
+rake "ar:create ar:migrate"
+rake "seed" unless ENV['PADRINO_ENV'] == 'test'
 
 # Make the admin and main app share sessions. 
 #
@@ -121,21 +122,9 @@ inject_into_file 'app/controllers/contents.rb', ", :provides => [:html, :rss, :a
 
 # Copy the CmsUtils module the cms views and CKEditor files into place
 #
-%w( lib/cms_utils.rb 
-    lib/uploader.rb
-    app/views/layouts/application.erb 
-    app/views/main.erb
-    app/views/sitemap.erb
-    app/views/sitemap.xml.erb
-    app/views/contents/show.erb
-    app/views/contents/index.erb
-    admin/views/layouts/application.erb
-    admin/controllers/images.rb
-    public/stylesheets/application.css
-    public/admin/stylesheets/base.css
-    public/admin/javascripts
-    public/admin/images
-  ).each do |path|
+require File.dirname(__FILE__) + '/file_paths'
+
+TEMPLATE_FILE_PATHS.each do |path|
  
   puts "Copying #{File.dirname(__FILE__)}/#{path} to #{destination_root}/#{path}"
   FileUtils.cp_r "#{File.dirname(__FILE__)}/#{path}", "#{destination_root}/#{path}"
