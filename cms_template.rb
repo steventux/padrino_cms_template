@@ -1,12 +1,13 @@
 # Template for simple ActiveRecord based CMS with Padrino.
 # First generate the project with all our favourite bits n bobs.
-project :test => :minitest, :renderer => :erb, :stylesheet => :less, :script => :jquery, :orm => :activerecord, :bundle => true
+project :test => :minitest, :renderer => :erb, :script => :jquery, :orm => :activerecord, :bundle => true
+
+["db", "lib"].each { |dir| FileUtils.mkdir "#{destination_root}/#{dir}" }
 
 SESSION_KEY_SETTING = "set :session_id, :_padrino_cms_session_id"
 
 # Set up the session key, the cms filter and a couple of basic routes
 #
-# TODO: Might be simpler to copy the whole app.rb into place.
 APP_INIT = <<-APP
 
   #{SESSION_KEY_SETTING}
@@ -102,10 +103,12 @@ generate :admin_page, "content"
 #
 puts "Creating associations."
 CONTENT_MODEL = <<-CONTENT
+
   belongs_to :account
   validates_presence_of :path
   validates_presence_of :title
   validates_presence_of :body
+
 CONTENT
 
 inject_into_file 'models/content.rb', CONTENT_MODEL, :after => "ActiveRecord::Base\n"
@@ -140,8 +143,30 @@ gem 'fog'
 
 GEMS
 
+DIFFRENT_GEMS = <<-GEMS
+
+# Diffrent gems
+gem 'vestal_versions', :git => "git://github.com/futurechimp/vestal_versions.git"
+gem 'diffrent'
+
+GEMS
+
 puts "Adding required gems to Gemfile"
 inject_into_file 'Gemfile', IMAGE_UPLOAD_GEMS, :after => "gem 'sqlite3'\n"
+# TODO: Fix me.
+# inject_into_file 'Gemfile', DIFFRENT_GEMS, :after => "# gem 'padrino', :git => 'git://github.com/padrino/padrino-framework.git'\n"
+
+DIFFRENT_INCLUDE = <<-INCLUDE
+  
+  versioned
+  include Diffrent
+  
+INCLUDE
+
+puts "Adding versioning for Content"
+inject_into_file 'models/content.rb', DIFFRENT_INCLUDE, :after => "ActiveRecord::Base\n"
+# get 'https://raw.github.com/futurechimp/vestal_versions/master/lib/generators/vestal_versions/migration/templates/migration.rb', 'db/migrate/003_create_versions.rb'
+# rake 'ar:migrate'
 
 puts "Including CMS utility methods in contents_helper.rb"
 HELPER_METHODS = <<-HELPER
@@ -150,14 +175,4 @@ HELPER
 
 inject_into_file 'app/helpers/contents_helper.rb', HELPER_METHODS, :after => ".helpers do\n"
 
-
-#CONTENT_FORM_PATH_FIELD = <<-CONTENT
-#  -if params[:path]
-#    =f.hidden_field :path, :value => params[:path]
-#  -else
-#CONTENT
-
-#inject_into_file 'admin/views/contents/_form.haml', CONTENT_FORM_PATH_FIELD, :before => "   =f.label :path"
-
 get 'https://github.com/padrino/sample_blog/raw/master/public/stylesheets/reset.css', 'public/stylesheets/reset.css'
-# get "https://github.com/padrino/sample_blog/raw/master/app/stylesheets/application.less", 'app/stylesheets/application.sass'
