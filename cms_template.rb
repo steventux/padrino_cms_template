@@ -125,6 +125,7 @@ inject_into_file 'app/controllers/contents.rb', ", :provides => [:html, :rss, :a
 
 # Copy the CmsUtils module the cms views and CKEditor files into place
 #
+get "https://raw.github.com/steventux/padrino_cms_template/master/file_paths.rb", "#{File.dirname(__FILE__)}/file_paths.rb"
 require File.dirname(__FILE__) + '/file_paths'
 
 TEMPLATE_FILE_PATHS.each do |path|
